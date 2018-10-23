@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+import cv2
+
+#;east significant bit (LSB) stegnography
+#our images are 256x256
+
+def encode(cover, secret, stegimg, num):
+    cov=cv2.imread(cover)
+    sec=cv2.imread(secret)
+    steg=cv2.imread(stegimg)
+    for xcord in range(256):  #for whatever reason, the x and y axis are flipped in opencv. y comes first
+        for ycord in range(256):
+            for color in range(3): #for each color of each pixel,
+                covcolbits=(cov[xcord, ycord, color]>>num)<<num #get the 8-num most significant bits
+                seccolbits=sec[xcord,ycord, color]>>(8-num) #get the num most significant bits
+                steg[xcord, ycord, color]=covcolbits+seccolbits #put them together
+    cv2.imwrite(stegimg, steg)
+
+def decode(stegimg, extract, num):
+    ext=cv2.imread(extract)
+    steg=cv2.imread(stegimg)
+    for xcord in range(256):  #for whatever reason, the x and y axis are flipped in opencv. y comes first
+        for ycord in range(256):
+            for color in range(3): #for each color of each pixel,
+                seccolbits=steg[xcord,ycord,color]<<(8-num) #get the num bits from the stegimg
+                ext[xcord, ycord, color] = seccolbits
+    cv2.imwrite(extract, ext)
+    
+if __name__ == '__main__':
+    cover="cover.png"
+    secret="secret.png"
+    stegimg="steg.png"
+    extract="extract.png"
+    encode(cover, secret, stegimg, 4)  
+    decode(stegimg, extract, 4)
